@@ -1,0 +1,72 @@
+storage:
+  redis:
+    host: 192.168.127.133
+    port: 6379
+    password: foobared
+    #连接实例的最大连接数
+    maxActive: 1024
+    #控制一个pool最多有多少个状态为idle(空闲的)的jedis实例
+    maxIdle: 200
+    #等待可用连接的最大时间，单位毫秒，-1表示永不超时
+    maxWait: 10000
+    #连接超时的时间　
+    timeOut: 10000
+    #在获取一个jedis实例时，是否提前进行validate操作
+    testOnBorrow: true
+  derby:
+    #自定义derby数据的主目录
+    #home:
+    userName: root
+    password: root
+    #初始连接数
+    initialSize: 5
+#应用相关配置
+application:
+  #每隔多少秒检测一次配置文件(毫秒)
+  manager:
+    ymlScanRate: 5000
+  #为所有服务设置最多每秒调用次数
+  #serviceLimit: 2000
+  #RPC相关配置
+  rpc:
+    #PRC服务端口号
+    port: 7070
+  #REST相关配置
+  rest:
+    #REST服务端口号
+    port: 8182
+    #REST服务固定前缀
+    prefix: /api/rest/das
+  #websocket相关配置
+  ws:
+    #websocket服务端口号
+    port: 8282
+    #websocket固定前缀
+    prefix: /wsss
+  #网关相关配置
+  gateway:
+    #网关端口号
+    port: 10000 
+  #注册中心相关配置
+  registry:
+    #注册中心集群mater节点IP地址
+    masterIp: 172.18.0.239
+    #注册中心IP地址 172.18.195.101
+    domain: registry.das.sunsheen.cn
+#在调用未订阅的服务的配置
+service:
+   #是否异步调用
+  async: false
+  #服务调用超时时间（毫秒）
+  timeout: 120000
+  #集群容错策略 Failover：失败自动切换，当出现失败，重试其它服务器；Failfast：快速失败，只发起一次调用，失败立即报错；Failsafe： 失败安全，出现异常时，直接忽略；Failback：失败自动恢复，后台记录失败请求，定时重发；Forking：并行调用多个服务器，只要一个成功即返回；
+  fail: 
+    strategy: Failfast
+    #当容错策略为"Failover"时重复的次数。
+    times: 2 
+  #服务调用序列化方式Marshalling：0；Kryo：1；Json：2；FST：3；
+  serialize: 3
+  #在调用未订阅的服务并且未指定服务版本时的默认版本号
+  defaultVersion: 1.0.0
+
+

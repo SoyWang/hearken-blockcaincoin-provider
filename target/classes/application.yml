@@ -1,0 +1,39 @@
+!!yaml
+application:
+  manager:
+    ymlScanRate: 5000
+  rpc:
+    port: 7070
+  rest:
+    port: 8182
+    prefix: /api/rest/das
+  ws:
+    port: 8282
+    prefix: /wsss
+  gateway:
+    port: 10000
+  registry:
+    masterIp: 172.18.0.239
+    domain: registry.das.sunsheen.cn
+service:
+  async: false
+  timeout: 120000
+  fail:
+    strategy: Failfast
+    times: 2
+  serialize: 3
+  defaultVersion: 1.0.0
+storage:
+  redis:
+    host: 192.168.127.133
+    port: 6379
+    password: foobared
+    maxActive: 1024
+    maxIdle: 200
+    maxWait: 10000
+    timeOut: 10000
+    testOnBorrow: true
+  derby:
+    userName: root
+    password: root
+    initialSize: 5
