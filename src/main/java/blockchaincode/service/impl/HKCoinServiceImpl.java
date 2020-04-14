@@ -56,7 +56,7 @@ public class HKCoinServiceImpl implements IHKCoinService{
 		Orderer order = fabricClient.getOrderer("orderer.example.com",
 				"grpcs://orderer.example.com:7050", path+ File.separator +BlockChainConstant.tlsOrderFilePath);
 		String initArgs[] = {username};
-		fabricClient.invoke("plug-in-coin-channel", TransactionRequest.Type.GO_LANG,
+		fabricClient.invoke("mychannel", TransactionRequest.Type.GO_LANG,
 				"hkcoin", order, peers, "createAccount", initArgs);
 	}
 
@@ -72,7 +72,7 @@ public class HKCoinServiceImpl implements IHKCoinService{
 				"grpcs://orderer.example.com:7050", path+ File.separator +BlockChainConstant.tlsOrderFilePath);
 		//(1) 发送人(2) 接收人(3) 代币名(4)发送代币量
 		String initArgs[] = {"sunsheen",username,"HKC",amount};
-		fabricClient.invoke("plug-in-coin-channel", TransactionRequest.Type.GO_LANG,
+		fabricClient.invoke("mychannel", TransactionRequest.Type.GO_LANG,
 				"hkcoin", order, peers, "transferToken", initArgs);
 		
 	}
@@ -89,7 +89,7 @@ public class HKCoinServiceImpl implements IHKCoinService{
 				"grpcs://orderer.example.com:7050", path+ File.separator +BlockChainConstant.tlsOrderFilePath);
 		//(1) 发送人(2) 接收人(3) 代币名(4)发送代币量
 		String initArgs[] = {username,"sunsheen","HKC",amount};
-		fabricClient.invoke("plug-in-coin-channel", TransactionRequest.Type.GO_LANG,
+		fabricClient.invoke("mychannel", TransactionRequest.Type.GO_LANG,
 				"hkcoin", order, peers, "transferToken", initArgs);
 		
 	}
@@ -102,7 +102,7 @@ public class HKCoinServiceImpl implements IHKCoinService{
 		List<Peer> peers = new ArrayList<>();
 		peers.add(peer0);
 		String initArgs[] = {username,"HKC"};
-		Map result = fabricClient.queryChaincode(peers, "plug-in-coin-channel",
+		Map result = fabricClient.queryChaincode(peers, "mychannel",
 				TransactionRequest.Type.GO_LANG, "hkcoin", "balance", initArgs);
 		return result;
 	}
@@ -123,7 +123,7 @@ public class HKCoinServiceImpl implements IHKCoinService{
 			params.add(username);
 		}
 		String initArgs[] = params.toArray(new String[params.size()]);
-		fabricClient.invoke("plug-in-coin-channel", TransactionRequest.Type.GO_LANG,
+		fabricClient.invoke("mychannel", TransactionRequest.Type.GO_LANG,
 				"hkcoin", order, peers, "initLedger", initArgs);
 	}
 	
@@ -143,7 +143,7 @@ public class HKCoinServiceImpl implements IHKCoinService{
 		Orderer order = fabricClient.getOrderer("orderer.example.com",
 				"grpcs://orderer.example.com:7050", path+ File.separator +BlockChainConstant.tlsOrderFilePath);
 		String initArgs[] = {"HKCoin","HKC","9999999",username,"false"};
-		fabricClient.invoke("plug-in-coin-channel", TransactionRequest.Type.GO_LANG,
+		fabricClient.invoke("mychannel", TransactionRequest.Type.GO_LANG,
 				"hkcoin", order, peers, "initCurrency", initArgs);
 	}
 
@@ -155,8 +155,9 @@ public class HKCoinServiceImpl implements IHKCoinService{
 		List<Peer> peers = new ArrayList<>();
 		peers.add(peer0);
 		String initArgs[] = {"HKC"};
-		Map result = fabricClient.queryChaincode(peers, "plug-in-coin-channel",
+		Map result = fabricClient.queryChaincode(peers, "mychannel",
 				TransactionRequest.Type.GO_LANG, "hkcoin", "tokenHistory", initArgs);
+		System.out.println(result);
 		return result;
 	}
 
@@ -168,7 +169,7 @@ public class HKCoinServiceImpl implements IHKCoinService{
 		List<Peer> peers = new ArrayList<>();
 		peers.add(peer0);
 		String initArgs[] = {"HKC",username};
-		Map result = fabricClient.queryChaincode(peers, "plug-in-coin-channel",
+		Map result = fabricClient.queryChaincode(peers, "mychannel",
 				TransactionRequest.Type.GO_LANG, "hkcoin", "userTokenHistory", initArgs);
 		return result;
 	}

@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.HashMap;
 import java.util.Map;
 
 import javax.ws.rs.GET;
@@ -30,7 +31,7 @@ import com.sunsheen.jfids.das.core.annotation.Describe;
  *
  */
 @Bean("HKCoin-REST")
-@Path("/hk-coin")
+@Path("/hearken-coin")
 public class HKCoinRest extends BaseResource{
 	private static  Logger logger = LoggerFactory.getLogger(HKCoinRest.class);
 	//将request转换成json串
@@ -68,10 +69,10 @@ public class HKCoinRest extends BaseResource{
 			}
 			String proPath = System.getProperty("user.dir");//当前项目路径地址
 			/** windows上目录 **/
-			String realPath = proPath.concat(File.separator +"src"+ 
-					File.separator +"main"+ File.separator +"resources");
+//			String realPath = proPath.concat(File.separator +"src"+
+//					File.separator +"main"+ File.separator +"resources");
 			/** Linux上目录 **/
-//			String realPath = (proPath.substring(0,proPath.indexOf("bin"))).concat("app");
+			String realPath = (proPath.substring(0,proPath.indexOf("bin"))).concat("app"); //xxxx/bin/command
 			service.initAccount(username, realPath);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -103,10 +104,10 @@ public class HKCoinRest extends BaseResource{
 			}
 			String proPath = System.getProperty("user.dir");//当前项目路径地址
 			/** windows上目录 **/
-			String realPath = proPath.concat(File.separator +"src"+ 
-					File.separator +"main"+ File.separator +"resources");
+//			String realPath = proPath.concat(File.separator +"src"+
+//					File.separator +"main"+ File.separator +"resources");
 			/** Linux上目录 **/
-//			String realPath = (proPath.substring(0,proPath.indexOf("bin"))).concat("app");
+			String realPath = (proPath.substring(0,proPath.indexOf("bin"))).concat("app");
 			service.award(username, amount, realPath);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -140,10 +141,10 @@ public class HKCoinRest extends BaseResource{
 			}
 			String proPath = System.getProperty("user.dir");//当前项目路径地址
 			/** windows上目录 **/
-			String realPath = proPath.concat(File.separator +"src"+ 
-					File.separator +"main"+ File.separator +"resources");
+//			String realPath = proPath.concat(File.separator +"src"+
+//					File.separator +"main"+ File.separator +"resources");
 			/** Linux上目录 **/
-//			String realPath = (proPath.substring(0,proPath.indexOf("bin"))).concat("app");
+			String realPath = (proPath.substring(0,proPath.indexOf("bin"))).concat("app");
 			service.recycle(username, amount, realPath);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -168,10 +169,10 @@ public class HKCoinRest extends BaseResource{
 			String username = servletRequest.getParameter("username");
 			String proPath = System.getProperty("user.dir");//当前项目路径地址
 			/** windows上目录 **/
-			String realPath = proPath.concat(File.separator +"src"+ 
-					File.separator +"main"+ File.separator +"resources");
+//			String realPath = proPath.concat(File.separator +"src"+
+//					File.separator +"main"+ File.separator +"resources");
 			/** Linux上目录 **/
-//			String realPath = (proPath.substring(0,proPath.indexOf("bin"))).concat("app");
+			String realPath = (proPath.substring(0,proPath.indexOf("bin"))).concat("app");
 			result = service.getUserAccount(username, realPath);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -191,7 +192,10 @@ public class HKCoinRest extends BaseResource{
 		HKCoinServiceImpl service = new HKCoinServiceImpl();
 		String username = null;
 		try {
-			Map<String,Object> map = JsonParseUtil.json2Map(req2Json());
+			String json = req2Json();
+			Map<String,Object> map = new HashMap();
+			if(null != json)
+				map = JsonParseUtil.json2Map(json);
 			for(Map.Entry<String, Object> result : map.entrySet()){
 				if(result.getKey().equals("username")){
 					username = String.valueOf(result.getValue());
@@ -199,10 +203,10 @@ public class HKCoinRest extends BaseResource{
 			}
 			String proPath = System.getProperty("user.dir");//当前项目路径地址
 			/** windows上目录 **/
-			String realPath = proPath.concat(File.separator +"src"+ 
-					File.separator +"main"+ File.separator +"resources");
+//			String realPath = proPath.concat(File.separator +"src"+
+//					File.separator +"main"+ File.separator +"resources");
 			/** Linux上目录 **/
-//			String realPath = (proPath.substring(0,proPath.indexOf("bin"))).concat("app");
+			String realPath = (proPath.substring(0,proPath.indexOf("bin"))).concat("app");
 			service.admin(username, realPath);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -227,10 +231,10 @@ public class HKCoinRest extends BaseResource{
 			}
 			String proPath = System.getProperty("user.dir");//当前项目路径地址
 			/** windows上目录 **/
-			String realPath = proPath.concat(File.separator +"src"+ 
-					File.separator +"main"+ File.separator +"resources");
+//			String realPath = proPath.concat(File.separator +"src"+
+//					File.separator +"main"+ File.separator +"resources");
 			/** Linux上目录 **/
-//			String realPath = (proPath.substring(0,proPath.indexOf("bin"))).concat("app");
+			String realPath = (proPath.substring(0,proPath.indexOf("bin"))).concat("app");
 			service.initCurrency(username, realPath);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -253,10 +257,10 @@ public class HKCoinRest extends BaseResource{
 		try {
 			String proPath = System.getProperty("user.dir");//当前项目路径地址
 			/** windows上目录 **/
-			String realPath = proPath.concat(File.separator +"src"+ 
-					File.separator +"main"+ File.separator +"resources");
+//			String realPath = proPath.concat(File.separator +"src"+
+//					File.separator +"main"+ File.separator +"resources");
 			/** Linux上目录 **/
-//			String realPath = (proPath.substring(0,proPath.indexOf("bin"))).concat("app");
+			String realPath = (proPath.substring(0,proPath.indexOf("bin"))).concat("app");
 			result = service.coinHistory(realPath);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -279,10 +283,10 @@ public class HKCoinRest extends BaseResource{
 			String username = servletRequest.getParameter("username");
 			String proPath = System.getProperty("user.dir");//当前项目路径地址
 			/** windows上目录 **/
-			String realPath = proPath.concat(File.separator +"src"+ 
-					File.separator +"main"+ File.separator +"resources");
+//			String realPath = proPath.concat(File.separator +"src"+
+//					File.separator +"main"+ File.separator +"resources");
 			/** Linux上目录 **/
-//			String realPath = (proPath.substring(0,proPath.indexOf("bin"))).concat("app");
+			String realPath = (proPath.substring(0,proPath.indexOf("bin"))).concat("app");
 			result = service.userCoinHistory(username, realPath);
 		} catch (Exception e) {
 			e.printStackTrace();

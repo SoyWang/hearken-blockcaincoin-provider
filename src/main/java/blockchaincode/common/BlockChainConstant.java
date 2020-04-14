@@ -16,7 +16,7 @@ public class BlockChainConstant {
 	/**
 	 * 密钥文件名
 	 */
-	public static final String keyFileName = "62490a66d8d5ffa05dc57712c2793b546c929a2fd9ae521cf8d3cde59b807986_sk";
+	public static final String keyFileName = "c9d1c576e97ca1134641760c646a07bf39ab252cee1cde66e0bd9df28dd0e3b7_sk";
 	
 	/**
 	 * cert文件位置

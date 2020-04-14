@@ -11,7 +11,7 @@
   <component name="MavenImportPreferences">
     <option name="generalSettings">
       <MavenGeneralSettings>
-        <option name="mavenHome" value="$PROJECT_DIR$/../../soft/apache-maven-3.6.1" />
+        <option name="mavenHome" value="E:/WangSong/soft/apache-maven-3.6.1" />
         <option name="userSettingsFile" value="E:\WangSong\soft\apache-maven-3.6.1\conf\settings.xml" />
       </MavenGeneralSettings>
     </option>
@@ -25,8 +25,17 @@
   <component name="PropertiesComponent">
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="aspect.path.notification.shown" value="true" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/src/main/resources" />
     <property name="settings.editor.selected.configurable" value="MavenSettings" />
+  </component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\戴尔\Desktop\hkcoin-provider\src\main\resources" />
+    </key>
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\戴尔\Desktop\hkcoin-provider\src\main\resources" />
+      <recent name="C:\Users\戴尔\Desktop\hkcoin-provider\src\main\java\blockchaincode\utils" />
+    </key>
   </component>
   <component name="RunDashboard">
     <option name="ruleStates">
@@ -40,7 +49,20 @@
       </list>
     </option>
   </component>
-  <component name="RunManager">
+  <component name="RunManager" selected="Application.CryptoUtil">
+    <configuration name="CryptoUtil" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="blockchaincode.utils.CryptoUtil" />
+      <module name="blockchaincode-provider" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="blockchaincode.utils.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
     <configuration name="DasApplicationBootstrap" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
       <option name="MAIN_CLASS_NAME" value="blockchaincode.DasApplicationBootstrap" />
       <module name="blockchaincode-provider" />
@@ -54,8 +76,23 @@
         <option name="Make" enabled="true" />
       </method>
     </configuration>
+    <configuration name="Test" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="blockchaincode.utils.Test" />
+      <module name="blockchaincode-provider" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="blockchaincode.utils.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Application.CryptoUtil" />
+        <item itemvalue="Application.Test" />
         <item itemvalue="Application.DasApplicationBootstrap" />
       </list>
     </recent_temporary>
@@ -72,6 +109,9 @@
       <updated>1586251498067</updated>
       <workItem from="1586251505333" duration="604000" />
       <workItem from="1586252151411" duration="481000" />
+      <workItem from="1586488674072" duration="8591000" />
+      <workItem from="1586762017176" duration="8575000" />
+      <workItem from="1586830103084" duration="16721000" />
     </task>
     <servers />
   </component>
