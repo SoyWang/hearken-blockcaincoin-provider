@@ -37,18 +37,18 @@ public class HKCoinRest extends BaseResource{
 	//将request转换成json串
 	private String req2Json() throws IOException{
 		// 读取请求内容
-        BufferedReader br = new BufferedReader(new InputStreamReader(servletRequest.getInputStream()));
-        String line = null;
-        StringBuilder sb = new StringBuilder();
-        while((line = br.readLine())!=null){
-            sb.append(line);
-        }
-        // 将资料解码
-        String reqBody = sb.toString();
-        return reqBody;
+		BufferedReader br = new BufferedReader(new InputStreamReader(servletRequest.getInputStream()));
+		String line = null;
+		StringBuilder sb = new StringBuilder();
+		while((line = br.readLine())!=null){
+			sb.append(line);
+		}
+		// 将资料解码
+		String reqBody = sb.toString();
+		return reqBody;
 	}
-	
-	
+
+
 	/**
 	 * 初始化账户
 	 * @return
@@ -59,7 +59,7 @@ public class HKCoinRest extends BaseResource{
 	@Produces(MediaType.APPLICATION_JSON)
 	public String initAccount() {
 		IHKCoinService service = new HKCoinServiceImpl();
-		try {		
+		try {
 			Map<String,Object> map = JsonParseUtil.json2Map(req2Json());
 			String username = "";
 			for(Map.Entry<String, Object> result : map.entrySet()){
@@ -80,7 +80,7 @@ public class HKCoinRest extends BaseResource{
 		}
 		return WebUtils.responseMsg("初始化用户积分账户成功！");
 	}
-	
+
 	/**
 	 * 增加代币
 	 * @return
@@ -91,15 +91,19 @@ public class HKCoinRest extends BaseResource{
 	@Produces(MediaType.APPLICATION_JSON)
 	public String award(){
 		IHKCoinService service = new HKCoinServiceImpl();
-		String username = null,amount = null;//被奖励用户、奖励金额
+		String username = null,amount = null,description=null;//被奖励用户、奖励金额
 		//調用方法
 		try {
 			Map<String,Object> map = JsonParseUtil.json2Map(req2Json());
 			for(Map.Entry<String, Object> result : map.entrySet()){
 				if(result.getKey().equals("username")){
 					username = String.valueOf(result.getValue());
-				}else if(result.getKey().equals("amount")){
+				}
+				else if(result.getKey().equals("amount")){
 					amount = String.valueOf(result.getValue());
+				}
+				else if(result.getKey().equals("description")){
+					description = String.valueOf(result.getValue());
 				}
 			}
 			String proPath = System.getProperty("user.dir");//当前项目路径地址
@@ -108,15 +112,15 @@ public class HKCoinRest extends BaseResource{
 //					File.separator +"main"+ File.separator +"resources");
 			/** Linux上目录 **/
 			String realPath = (proPath.substring(0,proPath.indexOf("bin"))).concat("app");
-			service.award(username, amount, realPath);
+			service.award(username, amount, realPath,description);
 		} catch (Exception e) {
 			e.printStackTrace();
 			return WebUtils.responseMsg(500,e.getMessage());
 		}
-		
+
 		return WebUtils.responseMsg(amount + "积分已经增加到："+username +"的账户");
 	}
-	
+
 	/**
 	 * 减少代币
 	 * @return
@@ -127,7 +131,7 @@ public class HKCoinRest extends BaseResource{
 	@Produces(MediaType.APPLICATION_JSON)
 	public String recycle(){
 		IHKCoinService service = new HKCoinServiceImpl();
-		String username = null,amount = null;
+		String username = null,amount = null,description = null;
 		//調用方法
 		try {
 			Map<String,Object> map = JsonParseUtil.json2Map(req2Json());
@@ -135,8 +139,11 @@ public class HKCoinRest extends BaseResource{
 				if(result.getKey().equals("username")){
 					username = String.valueOf(result.getValue());
 				}
-				if(result.getKey().equals("amount")){
+				else if(result.getKey().equals("amount")){
 					amount = String.valueOf(result.getValue());
+				}
+				else if(result.getKey().equals("description")){
+					description = String.valueOf(result.getValue());
 				}
 			}
 			String proPath = System.getProperty("user.dir");//当前项目路径地址
@@ -145,15 +152,15 @@ public class HKCoinRest extends BaseResource{
 //					File.separator +"main"+ File.separator +"resources");
 			/** Linux上目录 **/
 			String realPath = (proPath.substring(0,proPath.indexOf("bin"))).concat("app");
-			service.recycle(username, amount, realPath);
+			service.recycle(username, amount, realPath,description);
 		} catch (Exception e) {
 			e.printStackTrace();
 			return WebUtils.responseMsg(500,e.getMessage());
 		}
-		
+
 		return WebUtils.responseMsg(amount + "积分已经从："+username +"的账户扣除");
 	}
-	
+
 	/**
 	 * 查询当前用户币
 	 * @return
@@ -183,7 +190,7 @@ public class HKCoinRest extends BaseResource{
 		}
 		return WebUtils.responseMsg(result.get(200));
 	}
-	
+
 	@Describe("注册管理员账户")
 	@Path("/admin")
 	@POST
@@ -214,7 +221,7 @@ public class HKCoinRest extends BaseResource{
 		}
 		return WebUtils.responseMsg("注册管理员成功");
 	}
-	
+
 	@Describe("初始化币池")
 	@Path("/initCurrency")
 	@POST
@@ -240,9 +247,9 @@ public class HKCoinRest extends BaseResource{
 			e.printStackTrace();
 			return WebUtils.responseMsg(500,e.getMessage());
 		}
-		return WebUtils.responseMsg("币池创建成功");
+		return WebUtils.responseMsg("初始化积分数量成功！");
 	}
-	
+
 	/**
 	 * 查询构件币的所有记录
 	 * @return
@@ -271,7 +278,7 @@ public class HKCoinRest extends BaseResource{
 		}
 		return WebUtils.responseMsg(result.get(200));
 	}
-	
+
 	@Describe("查询指定用户构件币记录")
 	@Path("/user-coin-history")
 	@GET
@@ -297,5 +304,5 @@ public class HKCoinRest extends BaseResource{
 		}
 		return WebUtils.responseMsg(result.get(200));
 	}
-	
+
 }
