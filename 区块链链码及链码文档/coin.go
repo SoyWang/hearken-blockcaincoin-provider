@@ -8,21 +8,21 @@ import (
 	"strconv"
 	"time"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
-	pb "github.com/hyperledger/fabric/protos/peer"
+	"github.com/hyperledger/fabric/protos/peer"
 )
+
+// -----------
+const TokenKey = "token"
+const Admin = "admin"
+
+// Define the Smart Contract structure
+type HearkenCoinContract struct {
+}
 
 type Msg struct {
 	Status  bool   `json:"Status"`
 	Code    int    `json:"Code"`
 	Message string `json:"Message"`
-}
-
-type TransactionRecord struct {
-	From   string  `json:"From"`
-	To     string  `json:"To"`
-	Amount float64 `json:"Amount"`
-	TxId   string  `json:"TxId"`
-	CreatedDate string `json:"CreatedDate"`	//创建时间
 }
 
 type Currency struct {
@@ -31,11 +31,27 @@ type Currency struct {
 	TokenSymbol string              `json:"TokenSymbol"`
 	TotalSupply float64             `json:"TotalSupply"`
 	User        map[string]float64  `json:"User"`
-	Record      []TransactionRecord `json:"Record"`
+
+	Record      []TransactionRecord `json:"Record"`	//历史信息
+}
+
+type TransactionRecord struct {
+	From   string  `json:"From"`
+	To     string  `json:"To"`
+	Amount float64 `json:"Amount"`
+	TxId   string  `json:"TxId"`
+	CreatedDate string `json:"CreatedDate"`	//创建时间
+	Description   string  `json:"Description"` //交易说明
 }
 
 type Token struct {
 	Currency map[string]Currency `json:"Currency"`
+}
+
+type Account struct {
+	Name      string             `json:"Name"`
+	Frozen    bool               `json:"Frozen"`
+	BalanceOf map[string]float64 `json:"BalanceOf"`
 }
 
 /**
@@ -70,7 +86,7 @@ func (token *Token) transfer(_from *Account, _to *Account, _currency string, _va
 		token.Currency[_currency].User[_from.Name] = _from.BalanceOf[_currency]
 		token.Currency[_currency].User[_to.Name] = _to.BalanceOf[_currency]
 
-		msg := &Msg{Status: true, Code: 0, Message: "转账成功"}
+		msg := &Msg{Status: true, Code: 0, Message: "转账成功！"}
 		rev, _ = json.Marshal(msg)
 		return rev
 	} else {
@@ -109,11 +125,10 @@ func (token *Token) initialSupply(_name string, _symbol string, _supply float64,
 }
 
 //添加转账记录
-func (token *Token) installRecord(_from string, _to string, _currency string, _value float64, txId string) []byte {
-
+func (token *Token) installRecord(_from string, _to string, _currency string, _value float64, txId string,description string) []byte {
 	var curr Currency
 
-	record := TransactionRecord{_from, _to, _value, txId,time.Now().Format("2006-01-02 15:04:05")}
+	record := TransactionRecord{_from, _to, _value, txId,time.Now().Format("2006-01-02 15:04:05"),description}
 	recordList := make([]TransactionRecord, 0)
 
 	recordList = append(token.Currency[_currency].Record, record)
@@ -131,6 +146,7 @@ func (token *Token) installRecord(_from string, _to string, _currency string, _v
 	return rev
 }
 
+//代币增发
 func (token *Token) mint(_currency string, _amount float64, _account *Account) []byte {
 	if !token.isCurrency(_currency) {
 		msg := &Msg{Status: false, Code: 0, Message: "货币符号不存在"}
@@ -148,6 +164,8 @@ func (token *Token) mint(_currency string, _amount float64, _account *Account) [
 	return rev
 
 }
+
+//代币回收
 func (token *Token) burn(_currency string, _amount float64, _account *Account) []byte {
 	if !token.isCurrency(_currency) {
 		msg := &Msg{Status: false, Code: 0, Message: "货币符号不存在"}
@@ -171,6 +189,7 @@ func (token *Token) burn(_currency string, _amount float64, _account *Account) [
 	}
 
 }
+
 func (token *Token) isCurrency(_currency string) bool {
 	if _, ok := token.Currency[_currency]; ok {
 		return true
@@ -178,17 +197,12 @@ func (token *Token) isCurrency(_currency string) bool {
 		return false
 	}
 }
+//锁仓
 func (token *Token) setLock(_currency string, _look bool) bool {
 	cur := token.Currency[_currency]
 	cur.Lock = _look
 	token.Currency[_currency] = cur
 	return token.Currency[_currency].Lock
-}
-
-type Account struct {
-	Name      string             `json:"Name"`
-	Frozen    bool               `json:"Frozen"`
-	BalanceOf map[string]float64 `json:"BalanceOf"`
 }
 
 func (account *Account) balance(_currency string) map[string]float64 {
@@ -200,18 +214,10 @@ func (account *Account) balanceAll() map[string]float64 {
 	return account.BalanceOf
 }
 
-// -----------
-const TokenKey = "Token"
-const Admin = "Admin"
-
-// Define the Smart Contract structure
-type SmartContract struct {
-}
-
 /**
-安装初始化
+token记录初始化
  */
-func (s *SmartContract) Init(stub shim.ChaincodeStubInterface) pb.Response {
+func (s *HearkenCoinContract) Init(stub shim.ChaincodeStubInterface) peer.Response {
 
 	token := &Token{Currency: map[string]Currency{}}
 
@@ -222,14 +228,14 @@ func (s *SmartContract) Init(stub shim.ChaincodeStubInterface) pb.Response {
 	} else {
 		fmt.Printf("Init Token %s \n", string(tokenAsBytes))
 	}
-	err = stub.SetEvent("tokenInvoke", []byte{})
+	err = stub.SetEvent("tokenInit", []byte{})
 	if err != nil {
 		return shim.Error(err.Error())
 	}
 	return shim.Success(nil)
 }
 
-func (s *SmartContract) Query(stub shim.ChaincodeStubInterface) pb.Response {
+func (s *HearkenCoinContract) Query(stub shim.ChaincodeStubInterface) peer.Response {
 	function, args := stub.GetFunctionAndParameters()
 	if function == "balance" {
 		return s.balance(stub, args)
@@ -241,14 +247,12 @@ func (s *SmartContract) Query(stub shim.ChaincodeStubInterface) pb.Response {
 	return shim.Error("Invalid Smart Contract function name.")
 }
 
-func (s *SmartContract) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
-
-	// Retrieve the requested Smart Contract function and arguments
+/**
+链码调用
+ */
+func (s *HearkenCoinContract) Invoke(stub shim.ChaincodeStubInterface) peer.Response {
+	// 获取链码方法跟参数
 	function, args := stub.GetFunctionAndParameters()
-	// Route to the appropriate handler function to interact with the ledger appropriately
-	//CORE_PEER_ADDRESS=peer:7052 CORE_CHAINCODE_ID_NAME=token:0 ./token
-	//peer chaincode install -p chaincodedev/chaincode/token -n token -v 0
-	//peer chaincode instantiate -n token -v 0 -c '{"Args":[]}' -C myc
 	if function == "initLedger" {
 		// 注册管理员账户
 		//peer chaincode invoke -C myc -n token -c '{"function":"initLedger","Args":[]}'
@@ -314,16 +318,38 @@ func (s *SmartContract) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 		//peer chaincode invoke -C myc -n token -c '{"function":"showTokenUser","Args":["ada"]}'
 		return s.showTokenUser(stub, args)
 	}
-
 	return shim.Error("Invalid Smart Contract function name.")
+}
+
+//查看代币的所有持有用户
+func (s *HearkenCoinContract) showTokenUser(stub shim.ChaincodeStubInterface, args []string) peer.Response {
+	if len(args) != 1 {
+		return shim.Error("Incorrect number of arguments. Expecting 1")
+	}
+	_token := args[0]
+	token := Token{}
+	existAsBytes, err := stub.GetState(TokenKey)
+	if err != nil {
+		return shim.Error(err.Error())
+	} else {
+		fmt.Printf("GetState(%s)) %s \n", TokenKey, string(existAsBytes))
+	}
+	json.Unmarshal(existAsBytes, &token)
+	reToekn, err := json.Marshal(token.Currency[_token])
+	if err != nil {
+		return shim.Error(err.Error())
+	} else {
+		fmt.Printf("Account balance %s \n", string(reToekn))
+	}
+	return shim.Success(reToekn)
 }
 
 /**
 创建账户
  */
-func (s *SmartContract) createAccount(stub shim.ChaincodeStubInterface, args []string) pb.Response {
+func (s *HearkenCoinContract) createAccount(stub shim.ChaincodeStubInterface, args []string) peer.Response {
 	if len(args) != 1 {
-		return shim.Error("只能有一个账户名参数！")
+		return shim.Error("一个账户名参数！")
 	}
 	key := args[0]
 	name := args[0]
@@ -353,12 +379,12 @@ func (s *SmartContract) createAccount(stub shim.ChaincodeStubInterface, args []s
 /**
 注册管理员
  */
-func (s *SmartContract) initLedger(stub shim.ChaincodeStubInterface, args []string) pb.Response {
+func (s *HearkenCoinContract) initLedger(stub shim.ChaincodeStubInterface, args []string) peer.Response {
 	var key string
 	var name string
 	if len(args)==0 {
-	    key = "sunsheen"
-	    name = "sunsheen" 
+	    key = "成都淞幸科技有限责任公司"
+	    name = "成都淞幸科技有限责任公司"
 	}else if len(args)>1 {
 		return shim.Error("只能有一个参数：管理员名！")
 	}else{
@@ -367,7 +393,7 @@ func (s *SmartContract) initLedger(stub shim.ChaincodeStubInterface, args []stri
 	}
 	exist, err := stub.GetState(Admin)
 	if nil != exist {
-		return shim.Error("已经存在管理员！")
+		return shim.Error("已经存在管理员账户！")
 	}
 	//设置管理员
 	b, err := json.Marshal(key)//格式化成byte数组
@@ -385,6 +411,8 @@ func (s *SmartContract) initLedger(stub shim.ChaincodeStubInterface, args []stri
 	if err != nil {
 		return shim.Error(err.Error())
 	}
+	//初始化token
+	//HearkenCoinContract.Init()
 	//事件
 	err = stub.SetEvent("addAdmin", []byte{})
 	if err != nil {
@@ -393,7 +421,7 @@ func (s *SmartContract) initLedger(stub shim.ChaincodeStubInterface, args []stri
 	return shim.Success(accountAsBytes)
 }
 
-func (s *SmartContract) showToken(stub shim.ChaincodeStubInterface, args []string) pb.Response {
+func (s *HearkenCoinContract) showToken(stub shim.ChaincodeStubInterface, args []string) peer.Response {
 	tokenAsBytes, err := stub.GetState(TokenKey)
 	if err != nil {
 		return shim.Error(err.Error())
@@ -401,38 +429,17 @@ func (s *SmartContract) showToken(stub shim.ChaincodeStubInterface, args []strin
 	return shim.Success(tokenAsBytes)
 }
 
-func (s *SmartContract) showTokenUser(stub shim.ChaincodeStubInterface, args []string) pb.Response {
-
-	if len(args) != 1 {
-		return shim.Error("Incorrect number of arguments. Expecting 1")
-	}
-	_token := args[0]
-	token := Token{}
-	existAsBytes, err := stub.GetState(TokenKey)
-	if err != nil {
-		return shim.Error(err.Error())
-	}
-	json.Unmarshal(existAsBytes, &token)
-	reToekn, err := json.Marshal(token.Currency[_token])
-	if err != nil {
-		return shim.Error(err.Error())
-	} else {
-		fmt.Printf("Account balance %s \n", string(reToekn))
-	}
-	return shim.Success(reToekn)
-}
-
 /**
 初始化币池（创建代币）只能是管理员账户
  */
-func (s *SmartContract) initCurrency(stub shim.ChaincodeStubInterface, args []string) pb.Response {
+func (s *HearkenCoinContract) initCurrency(stub shim.ChaincodeStubInterface, args []string) peer.Response {
 	if len(args) != 5 {
 		return shim.Error("需要5个参数：(1) 代币全称 (2) 代币简称 (3) 代币总量 (4) 代币生成以后持有人 (5) 是否锁仓")
 	}
 	admin, err := stub.GetState(Admin)
-	//if admin == nil {
-	//	return shim.Error("未设置构件币管理员！" )
-	//}
+	if nil == admin {
+		return shim.Error("未设置管理员账户！" )
+	}
 	account, _ := json.Marshal(args[3])
 	if string(account) != string(admin) {
 		return shim.Error("只有管理员才能初始化币池!")
@@ -482,15 +489,16 @@ func (s *SmartContract) initCurrency(stub shim.ChaincodeStubInterface, args []st
 /**
 转账
  */
-func (s *SmartContract) transferToken(stub shim.ChaincodeStubInterface, args []string) pb.Response {
+func (s *HearkenCoinContract) transferToken(stub shim.ChaincodeStubInterface, args []string) peer.Response {
 
-	if len(args) != 4 {
-		return shim.Error("Incorrect number of arguments. Expecting 4：(1) 发送人(2) 接收人(3) 代币名(4)发送代币量")
+	if len(args) != 5 {
+		return shim.Error("Incorrect number of arguments. Expecting 4：(1) 发送人(2) 接收人(3) 代币名(4)发送代币量 (5)交易说明")
 	}
 	_from := args[0]
 	_to := args[1]
 	_currency := args[2]
 	_amount, _ := strconv.ParseFloat(args[3], 32)   //32 改成了64
+	_description := args[4]
 
 	if _amount <= 0 {
 		return shim.Error("交易的币数量必须大于零！")
@@ -500,9 +508,11 @@ func (s *SmartContract) transferToken(stub shim.ChaincodeStubInterface, args []s
 	if err != nil {
 		return shim.Error(err.Error())
 	}
+	if nil == fromAsBytes {
+		return shim.Error("没有"+_from+"的账户！")
+	}
 	fromAccount := &Account{}
 	json.Unmarshal(fromAsBytes, &fromAccount)
-
 	//发送人账户币是否足够转账
 	left := fromAccount.BalanceOf[_currency] //用户持有的当前代币数量---_currency：代币类型
 	if left < _amount {
@@ -514,9 +524,13 @@ func (s *SmartContract) transferToken(stub shim.ChaincodeStubInterface, args []s
 	if err != nil {
 		return shim.Error(err.Error())
 	}
+	if nil == toAsBytes {
+		return shim.Error("没有"+_to+"的账户！")
+	}
 	toAccount := &Account{}
 	json.Unmarshal(toAsBytes, &toAccount)
-	//总币池
+
+	//原来的记录信息
 	tokenAsBytes, err := stub.GetState(TokenKey)
 	if err != nil {
 		return shim.Error(err.Error())
@@ -525,36 +539,36 @@ func (s *SmartContract) transferToken(stub shim.ChaincodeStubInterface, args []s
 	json.Unmarshal(tokenAsBytes, &token)
 
 	//转账
-	result := token.transfer(fromAccount, toAccount, _currency, _amount)
-
+	//result := token.transfer(fromAccount, toAccount, _currency, _amount)
+	fromAccount.BalanceOf[_currency] -= _amount
+	toAccount.BalanceOf[_currency] += _amount
+	token.Currency[_currency].User[_from] = fromAccount.BalanceOf[_currency]
+	token.Currency[_currency].User[_to] = toAccount.BalanceOf[_currency]
 	tokenAsBytes, err = json.Marshal(token)
 	if err != nil {
 		return shim.Error(err.Error())
 	}
-	//保存转账信息
+	//保存转账后之后的账户信息
 	err = stub.PutState(TokenKey, tokenAsBytes)
 	if err != nil {
 		return shim.Error(err.Error())
 	}
-
+	//验证是否正常保存
 	existAsBytes, err := stub.GetState(TokenKey)
 	if err != nil {
 		return shim.Error(err.Error())
 	}
 	json.Unmarshal(existAsBytes, &token)
 
-	msg := Msg{}
-	json.Unmarshal(result, &msg)
-	if msg.Status == true {
-		result = token.installRecord(fromAccount.Name, toAccount.Name, _currency, _amount, stub.GetTxID())
-		fmt.Printf("Result %s \n", string(result))
-		tokenAsBytes, _ = json.Marshal(token)
-		err = stub.PutState(TokenKey, tokenAsBytes)
-		if err != nil {
-			return shim.Error(err.Error())
-		}
+	//添加到历史记录
+	token.installRecord(fromAccount.Name, toAccount.Name, _currency, _amount, stub.GetTxID(),_description)
+	//记录信息到token
+	tokenAsBytes, _ = json.Marshal(token)
+	err = stub.PutState(TokenKey, tokenAsBytes)
+	if err != nil {
+		return shim.Error(err.Error())
 	}
-
+	//重新设置付款人跟收款人的账户
 	fromAsBytes, err = json.Marshal(fromAccount)
 	if err != nil {
 		return shim.Error(err.Error())
@@ -573,28 +587,17 @@ func (s *SmartContract) transferToken(stub shim.ChaincodeStubInterface, args []s
 		return shim.Error(err.Error())
 	}
 
-	err = stub.SetEvent("transfer", []byte{})
+	err = stub.SetEvent("transferRecord", []byte{})
 	if err != nil {
 		return shim.Error(err.Error())
 	}
 	return shim.Success([]byte("转账成功"))
 }
-// Convert map json string
-func MapToJson(m map[string]float64) (string, error) {
-	jsonByte, err := json.Marshal(m)
-	if err != nil {
-		fmt.Printf("Marshal with error: %+v\n", err)
-		return "", nil
-	}
-
-	return string(jsonByte), nil
-}
-
 
 /**
 代币增发 (1)代币名称(2)增发数量(3)代币增发接收人
  */
-func (s *SmartContract) mintToken(stub shim.ChaincodeStubInterface, args []string) pb.Response {
+func (s *HearkenCoinContract) mintToken(stub shim.ChaincodeStubInterface, args []string) peer.Response {
 
 	if len(args) != 3 {
 		return shim.Error("Incorrect number of arguments. Expecting 3")
@@ -653,7 +656,7 @@ func (s *SmartContract) mintToken(stub shim.ChaincodeStubInterface, args []strin
 /**
 代币销毁 (1)代币名称(2)回收数量(3)回收的账户（回收谁的代币）(4)操作人
  */
-func (s *SmartContract) burnToken(stub shim.ChaincodeStubInterface, args []string) pb.Response {
+func (s *HearkenCoinContract) burnToken(stub shim.ChaincodeStubInterface, args []string) peer.Response {
 
 	if len(args) != 4 {
 		return shim.Error("Incorrect number of arguments. Expecting 4：(1)代币名称(2)回收数量(3)回收的账户（回收谁的代币）(4)操作人")
@@ -707,8 +710,8 @@ func (s *SmartContract) burnToken(stub shim.ChaincodeStubInterface, args []strin
 	return shim.Success(result)
 }
 
-func (s *SmartContract) setLock(stub shim.ChaincodeStubInterface, args []string) pb.Response {
-
+//锁仓
+func (s *HearkenCoinContract) setLock(stub shim.ChaincodeStubInterface, args []string) peer.Response {
 	if len(args) != 3 {
 		return shim.Error("Incorrect number of arguments. Expecting 2")
 	}
@@ -754,7 +757,9 @@ func (s *SmartContract) setLock(stub shim.ChaincodeStubInterface, args []string)
 	}
 	return shim.Success(nil)
 }
-func (s *SmartContract) frozenAccount(stub shim.ChaincodeStubInterface, args []string) pb.Response {
+
+//冻结账户
+func (s *HearkenCoinContract) frozenAccount(stub shim.ChaincodeStubInterface, args []string) peer.Response {
 
 	if len(args) != 3 {
 		return shim.Error("Incorrect number of arguments. Expecting 2")
@@ -808,7 +813,7 @@ func (s *SmartContract) frozenAccount(stub shim.ChaincodeStubInterface, args []s
 }
 
 //获取代币交易记录
-func (s *SmartContract) tokenHistory(stub shim.ChaincodeStubInterface, args []string) pb.Response {
+func (s *HearkenCoinContract) tokenHistory(stub shim.ChaincodeStubInterface, args []string) peer.Response {
 
 	if len(args) != 1 {
 		return shim.Error("Incorrect number of arguments. Expecting 1")
@@ -827,7 +832,7 @@ func (s *SmartContract) tokenHistory(stub shim.ChaincodeStubInterface, args []st
 }
 
 //获取某个用户某个代币交易记录
-func (s *SmartContract) userTokenHistory(stub shim.ChaincodeStubInterface, args []string) pb.Response {
+func (s *HearkenCoinContract) userTokenHistory(stub shim.ChaincodeStubInterface, args []string) peer.Response {
 
 	if len(args) != 2 {
 		return shim.Error("Incorrect number of arguments. Expecting 2")
@@ -836,7 +841,7 @@ func (s *SmartContract) userTokenHistory(stub shim.ChaincodeStubInterface, args 
 	_account := args[1]	//用户名
 
 	//是否有该用户
-	userAccount, err := stub.GetState(args[1])
+	userAccount, err := stub.GetState(_account)
 	if nil==userAccount {
 		return shim.Error("当前用户还没有构件币账户！")
 	}
@@ -860,7 +865,7 @@ func (s *SmartContract) userTokenHistory(stub shim.ChaincodeStubInterface, args 
 	return shim.Success(resultAsBytes)
 }
 
-func (s *SmartContract) getHistoryForKey(stub shim.ChaincodeStubInterface, args []string) pb.Response {
+func (s *HearkenCoinContract) getHistoryForKey(stub shim.ChaincodeStubInterface, args []string) peer.Response {
 	if len(args) != 1 {
 		return shim.Error("Incorrect number of arguments. Expecting 1")
 	}
@@ -916,7 +921,7 @@ func (s *SmartContract) getHistoryForKey(stub shim.ChaincodeStubInterface, args 
 	return shim.Success(buffer.Bytes())
 }
 
-func (s *SmartContract) showAccount(stub shim.ChaincodeStubInterface, args []string) pb.Response {
+func (s *HearkenCoinContract) showAccount(stub shim.ChaincodeStubInterface, args []string) peer.Response {
 
 	if len(args) != 1 {
 		return shim.Error("Incorrect number of arguments. Expecting 1")
@@ -933,7 +938,7 @@ func (s *SmartContract) showAccount(stub shim.ChaincodeStubInterface, args []str
 /**
 查询指定账户指定代币 (1)查询账户 （2） 代币名称
  */
-func (s *SmartContract) balance(stub shim.ChaincodeStubInterface, args []string) pb.Response {
+func (s *HearkenCoinContract) balance(stub shim.ChaincodeStubInterface, args []string) peer.Response {
 
 	if len(args) != 2 {
 		return shim.Error("Incorrect number of arguments. Expecting 2： (1)查询账户 （2） 代币名称")
@@ -958,7 +963,7 @@ func (s *SmartContract) balance(stub shim.ChaincodeStubInterface, args []string)
 	return shim.Success(resultAsBytes)
 }
 
-func (s *SmartContract) balanceAll(stub shim.ChaincodeStubInterface, args []string) pb.Response {
+func (s *HearkenCoinContract) balanceAll(stub shim.ChaincodeStubInterface, args []string) peer.Response {
 
 	if len(args) != 1 {
 		return shim.Error("Incorrect number of arguments. Expecting 1")
@@ -983,10 +988,10 @@ func (s *SmartContract) balanceAll(stub shim.ChaincodeStubInterface, args []stri
 
 // The main function is only relevant in unit test mode. Only included here for completeness.
 func main() {
-
 	// Create a new Smart Contract
-	err := shim.Start(new(SmartContract))
+	err := shim.Start(new(HearkenCoinContract))
 	if err != nil {
 		fmt.Printf("Error creating new Smart Contract: %s", err)
 	}
 }
+
